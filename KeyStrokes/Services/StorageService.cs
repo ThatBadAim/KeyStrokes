@@ -70,6 +70,8 @@ public sealed class StorageService
     {
         data.LifetimeKeyCounts ??= new();
         data.DailyKeyCounts ??= new();
+        data.DailyMouseDistance ??= new();
+        data.DailyScrollDistance ??= new();
         data.Settings ??= new AppSettings();
         data.Settings.ExcludedProcesses ??= new();
         data.Settings.ExcludedTitleKeywords ??= new();

@@ -20,6 +20,12 @@ public sealed class AppData
     /// <summary>Per-day totals, keyed by "yyyy-MM-dd" then by virtual-key code.</summary>
     public Dictionary<string, Dictionary<int, long>> DailyKeyCounts { get; set; } = new();
 
+    public double LifetimeMouseDistance { get; set; }
+    public double LifetimeScrollDistance { get; set; }
+
+    public Dictionary<string, double> DailyMouseDistance { get; set; } = new();
+    public Dictionary<string, double> DailyScrollDistance { get; set; } = new();
+
     public AppSettings Settings { get; set; } = new();
 
     [JsonIgnore]

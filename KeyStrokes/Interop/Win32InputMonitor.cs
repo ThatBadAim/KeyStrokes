@@ -27,6 +27,8 @@ internal sealed class Win32InputMonitor : IDisposable
     private readonly NativeMethods.WinEventDelegate _winEventProc;
 
     private readonly HashSet<int> _pressedKeys = new();
+    private NativeMethods.POINT _lastMousePos;
+    private bool _hasLastMousePos;
 
     private IntPtr _keyboardHook = IntPtr.Zero;
     private IntPtr _mouseHook = IntPtr.Zero;
@@ -39,6 +41,8 @@ internal sealed class Win32InputMonitor : IDisposable
     public volatile bool CaptureEnabled;
 
     public event Action<int>? KeyDown;
+    public event Action<double>? MouseMoved;
+    public event Action<double>? MouseScrolled;
     public event Action<ForegroundInfo>? ForegroundChanged;
 
     public Win32InputMonitor()
@@ -71,6 +75,7 @@ internal sealed class Win32InputMonitor : IDisposable
     private void ThreadProc()
     {
         _pressedKeys.Clear();
+        _hasLastMousePos = false;
 
         IntPtr hInstance = NativeMethods.GetModuleHandle(null);
 
@@ -121,7 +126,24 @@ internal sealed class Win32InputMonitor : IDisposable
         if (nCode == 0 && CaptureEnabled)
         {
             int msg = (int)wParam;
-            if (msg == NativeMethods.WM_LBUTTONDOWN)
+            if (msg == NativeMethods.WM_MOUSEMOVE)
+            {
+                var data = System.Runtime.InteropServices.Marshal
+                    .PtrToStructure<NativeMethods.MSLLHOOKSTRUCT>(lParam);
+                if (_hasLastMousePos)
+                {
+                    double dx = data.pt.X - _lastMousePos.X;
+                    double dy = data.pt.Y - _lastMousePos.Y;
+                    double distance = Math.Sqrt(dx * dx + dy * dy);
+                    if (distance > 0)
+                    {
+                        MouseMoved?.Invoke(distance);
+                    }
+                }
+                _lastMousePos = data.pt;
+                _hasLastMousePos = true;
+            }
+            else if (msg == NativeMethods.WM_LBUTTONDOWN)
             {
                 KeyDown?.Invoke(0x01); // VK_LBUTTON
             }
@@ -160,6 +182,7 @@ internal sealed class Win32InputMonitor : IDisposable
                 {
                     KeyDown?.Invoke(0x102); // Pseudo-VK for Scroll Wheel Down
                 }
+                MouseScrolled?.Invoke(Math.Abs(delta));
             }
             else if (msg == NativeMethods.WM_MOUSEHWHEEL)
             {
@@ -174,6 +197,7 @@ internal sealed class Win32InputMonitor : IDisposable
                 {
                     KeyDown?.Invoke(0x103); // Pseudo-VK for Scroll Wheel Left
                 }
+                MouseScrolled?.Invoke(Math.Abs(delta));
             }
         }
         return NativeMethods.CallNextHookEx(IntPtr.Zero, nCode, wParam, lParam);

@@ -42,69 +42,200 @@
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
 
-                <ItemsControl Grid.Row="0" ItemsSource="{Binding Rows}" HorizontalAlignment="Center" VerticalAlignment="Center">
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <ItemsControl ItemsSource="{Binding Keys}">
-                                <ItemsControl.ItemsPanel>
-                                    <ItemsPanelTemplate>
-                                        <StackPanel Orientation="Horizontal"/>
-                                    </ItemsPanelTemplate>
-                                </ItemsControl.ItemsPanel>
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <Border Width="{Binding WidthUnits, Converter={StaticResource KeyWidth}}"
-                                                Height="46" Margin="3" CornerRadius="8"
-                                                Effect="{Binding Intensity, Converter={StaticResource IntensityGlow}}">
-                                            <Border.Style>
-                                                <Style TargetType="Border">
-                                                    <Setter Property="Background" Value="{Binding Fill}"/>
-                                                    <Setter Property="BorderBrush" Value="{StaticResource StrokeBrush}"/>
-                                                    <Setter Property="BorderThickness" Value="1"/>
-                                                    <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding IsSpacer}" Value="True">
-                                                            <Setter Property="Background" Value="Transparent"/>
-                                                            <Setter Property="BorderThickness" Value="0"/>
-                                                            <Setter Property="Effect" Value="{x:Null}"/>
-                                                        </DataTrigger>
-                                                    </Style.Triggers>
-                                                </Style>
-                                            </Border.Style>
+                <Grid Grid.Row="0" HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Keyboard -->
+                    <ItemsControl Grid.Column="0" ItemsSource="{Binding Rows}" HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <ItemsControl ItemsSource="{Binding Keys}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <StackPanel Orientation="Horizontal"/>
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Width="{Binding WidthUnits, Converter={StaticResource KeyWidth}}"
+                                                    Height="46" Margin="3" CornerRadius="8"
+                                                    Effect="{Binding Intensity, Converter={StaticResource IntensityGlow}}">
+                                                <Border.Style>
+                                                    <Style TargetType="Border">
+                                                        <Setter Property="Background" Value="{Binding Fill}"/>
+                                                        <Setter Property="BorderBrush" Value="{StaticResource StrokeBrush}"/>
+                                                        <Setter Property="BorderThickness" Value="1"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsSpacer}" Value="True">
+                                                                <Setter Property="Background" Value="Transparent"/>
+                                                                <Setter Property="BorderThickness" Value="0"/>
+                                                                <Setter Property="Effect" Value="{x:Null}"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Border.Style>
+                                                <Border.ToolTip>
+                                                    <ToolTip>
+                                                        <StackPanel>
+                                                            <TextBlock Text="{Binding Face}" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}"/>
+                                                            <TextBlock Foreground="{StaticResource TextSecondaryBrush}">
+                                                                <Run Text="{Binding Count, Mode=OneWay, Converter={StaticResource Thousands}}"/><Run Text=" presses"/>
+                                                            </TextBlock>
+                                                        </StackPanel>
+                                                    </ToolTip>
+                                                </Border.ToolTip>
+                                                <Grid Margin="6,4">
+                                                    <TextBlock Text="{Binding Face}" FontSize="12" FontWeight="SemiBold"
+                                                               VerticalAlignment="Top" HorizontalAlignment="Left"
+                                                               Foreground="#F0FFFFFF"/>
+                                                    <TextBlock Text="{Binding Count, Converter={StaticResource Thousands}}"
+                                                               FontSize="10.5" VerticalAlignment="Bottom" HorizontalAlignment="Right"
+                                                               Foreground="#CCFFFFFF">
+                                                        <TextBlock.Style>
+                                                            <Style TargetType="TextBlock">
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding Count}" Value="0">
+                                                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </TextBlock.Style>
+                                                    </TextBlock>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <!-- Separator -->
+                    <Border Grid.Column="1" Width="1" Background="{StaticResource StrokeBrush}" Margin="32,10" VerticalAlignment="Stretch" SnapsToDevicePixels="True"/>
+
+                    <!-- Mouse Representation -->
+                    <StackPanel Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Center" Width="200">
+                        <TextBlock Text="MOUSE DEVICE" HorizontalAlignment="Center" FontSize="11" FontWeight="Bold" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,16"/>
+
+                        <Grid HorizontalAlignment="Center" Width="130" Height="200">
+                            <!-- Main Mouse Body Border -->
+                            <Border BorderBrush="{StaticResource StrokeBrush}" BorderThickness="2" CornerRadius="45" Background="#111622">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="70"/>
+                                        <RowDefinition Height="*"/>
+                                    </Grid.RowDefinitions>
+
+                                    <!-- Top half: Buttons -->
+                                    <Grid Grid.Row="0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="1"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <!-- Left Mouse Button -->
+                                        <Border Grid.Column="0" CornerRadius="43,0,0,0" BorderBrush="{StaticResource StrokeBrush}" BorderThickness="0,0,1,1" Background="{Binding LeftClickFill}" Margin="1,1,0,0">
                                             <Border.ToolTip>
                                                 <ToolTip>
-                                                    <StackPanel>
-                                                        <TextBlock Text="{Binding Face}" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}"/>
-                                                        <TextBlock Foreground="{StaticResource TextSecondaryBrush}">
-                                                            <Run Text="{Binding Count, Mode=OneWay, Converter={StaticResource Thousands}}"/><Run Text=" presses"/>
-                                                        </TextBlock>
-                                                    </StackPanel>
+                                                    <TextBlock Text="{Binding LeftClickCount, Converter={StaticResource Thousands}, StringFormat='Left Click: {0} presses'}"/>
                                                 </ToolTip>
                                             </Border.ToolTip>
-                                            <Grid Margin="6,4">
-                                                <TextBlock Text="{Binding Face}" FontSize="12" FontWeight="SemiBold"
-                                                           VerticalAlignment="Top" HorizontalAlignment="Left"
-                                                           Foreground="#F0FFFFFF"/>
-                                                <TextBlock Text="{Binding Count, Converter={StaticResource Thousands}}"
-                                                           FontSize="10.5" VerticalAlignment="Bottom" HorizontalAlignment="Right"
-                                                           Foreground="#CCFFFFFF">
-                                                    <TextBlock.Style>
-                                                        <Style TargetType="TextBlock">
-                                                            <Style.Triggers>
-                                                                <DataTrigger Binding="{Binding Count}" Value="0">
-                                                                    <Setter Property="Visibility" Value="Collapsed"/>
-                                                                </DataTrigger>
-                                                            </Style.Triggers>
-                                                        </Style>
-                                                    </TextBlock.Style>
-                                                </TextBlock>
-                                            </Grid>
+                                            <TextBlock Text="L" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="14" FontWeight="Bold" Foreground="#88FFFFFF"/>
                                         </Border>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
+
+                                        <!-- Divider -->
+                                        <Border Grid.Column="1" Background="{StaticResource StrokeBrush}" Height="70" VerticalAlignment="Stretch"/>
+
+                                        <!-- Right Mouse Button -->
+                                        <Border Grid.Column="2" CornerRadius="0,43,0,0" BorderBrush="{StaticResource StrokeBrush}" BorderThickness="0,0,0,1" Background="{Binding RightClickFill}" Margin="0,1,1,0">
+                                            <Border.ToolTip>
+                                                <ToolTip>
+                                                    <TextBlock Text="{Binding RightClickCount, Converter={StaticResource Thousands}, StringFormat='Right Click: {0} presses'}"/>
+                                                </ToolTip>
+                                            </Border.ToolTip>
+                                            <TextBlock Text="R" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="14" FontWeight="Bold" Foreground="#88FFFFFF"/>
+                                        </Border>
+
+                                        <!-- Middle Scroll Wheel in the center -->
+                                        <Border Grid.Column="1" HorizontalAlignment="Center" Width="10" Height="28" CornerRadius="5" Background="{Binding ScrollFill}" BorderBrush="{StaticResource StrokeBrush}" BorderThickness="1" VerticalAlignment="Center" Margin="-5,0,0,0" Panel.ZIndex="10">
+                                            <Border.ToolTip>
+                                                <ToolTip>
+                                                    <TextBlock Text="{Binding ScrollCount, Converter={StaticResource Thousands}, StringFormat='Scroll Wheel Actions: {0}'}"/>
+                                                </ToolTip>
+                                            </Border.ToolTip>
+                                        </Border>
+                                    </Grid>
+
+                                    <!-- Bottom half: Mouse Body -->
+                                    <Grid Grid.Row="1">
+                                        <!-- Middle Click Tooltip and visual info -->
+                                        <TextBlock Text="M" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,10,0,0" FontSize="12" FontWeight="Bold" Foreground="#33FFFFFF"/>
+
+                                        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                                            <!-- Sensor icon -->
+                                            <TextBlock Text="&#xE91C;" FontFamily="{StaticResource IconFont}" FontSize="18" Foreground="{StaticResource Accent1Brush}" HorizontalAlignment="Center" Margin="0,0,0,8"/>
+                                            <TextBlock Text="Sensor" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" HorizontalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Grid>
+                                </Grid>
+                            </Border>
+
+                            <!-- Side Buttons on the left edge (X1, X2) -->
+                            <StackPanel VerticalAlignment="Top" HorizontalAlignment="Left" Margin="-10,50,0,0">
+                                <!-- X1 Button -->
+                                <Border Width="8" Height="22" CornerRadius="3,0,0,3" BorderBrush="{StaticResource StrokeBrush}" BorderThickness="1" Background="{Binding X1ClickFill}">
+                                    <Border.ToolTip>
+                                        <ToolTip>
+                                            <TextBlock Text="{Binding X1ClickCount, Converter={StaticResource Thousands}, StringFormat='X1 (Back) Button: {0} presses'}"/>
+                                        </ToolTip>
+                                    </Border.ToolTip>
+                                </Border>
+                                <Border Height="4"/>
+                                <!-- X2 Button -->
+                                <Border Width="8" Height="22" CornerRadius="3,0,0,3" BorderBrush="{StaticResource StrokeBrush}" BorderThickness="1" Background="{Binding X2ClickFill}">
+                                    <Border.ToolTip>
+                                        <ToolTip>
+                                            <TextBlock Text="{Binding X2ClickCount, Converter={StaticResource Thousands}, StringFormat='X2 (Forward) Button: {0} presses'}"/>
+                                        </ToolTip>
+                                    </Border.ToolTip>
+                                </Border>
+                            </StackPanel>
+                        </Grid>
+
+                        <!-- Distance and Scroll Labels below the mouse image -->
+                        <StackPanel Margin="0,16,0,0">
+                            <Border Style="{StaticResource Card}" Padding="8,6" Margin="0,4,0,0" Background="#111622">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="Travel:" FontSize="11.5" Foreground="{StaticResource TextSecondaryBrush}"/>
+                                    <TextBlock Grid.Column="1" HorizontalAlignment="Right" FontSize="11.5" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}">
+                                        <Run Text="{Binding MouseDistance, StringFormat='N0'}"/><Run Text=" px"/>
+                                    </TextBlock>
+                                </Grid>
+                            </Border>
+                            <Border Style="{StaticResource Card}" Padding="8,6" Margin="0,4,0,0" Background="#111622">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="Scroll:" FontSize="11.5" Foreground="{StaticResource TextSecondaryBrush}"/>
+                                    <TextBlock Grid.Column="1" HorizontalAlignment="Right" FontSize="11.5" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}">
+                                        <Run Text="{Binding ScrollDistance, StringFormat='N0'}"/><Run Text=" units"/>
+                                    </TextBlock>
+                                </Grid>
+                            </Border>
+                        </StackPanel>
+                    </StackPanel>
+                </Grid>
 
                 <!-- Legend -->
                 <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,28,0,0">
