@@ -18,6 +18,7 @@ public enum KeyCategory
     Function,
     Numpad,
     Media,
+    Mouse,
     Other,
 }
 
@@ -68,6 +69,15 @@ public static class KeyMapper
         if (vk >= 0x30 && vk <= 0x39) return ((char)vk).ToString();
         return vk switch
         {
+            0x01 => "LClick",
+            0x02 => "RClick",
+            0x04 => "MClick",
+            0x05 => "X1Clk",
+            0x06 => "X2Clk",
+            0x101 => "ScrUp",
+            0x102 => "ScrDn",
+            0x103 => "ScrLf",
+            0x104 => "ScrRt",
             0xBA => ";", 0xBB => "=", 0xBC => ",", 0xBD => "-", 0xBE => ".",
             0xBF => "/", 0xC0 => "`", 0xDB => "[", 0xDC => "\\", 0xDD => "]", 0xDE => "'",
             0x70 => "F1", 0x71 => "F2", 0x72 => "F3", 0x73 => "F4", 0x74 => "F5", 0x75 => "F6",
@@ -78,6 +88,9 @@ public static class KeyMapper
 
     public static KeyCategory Category(int vk)
     {
+        if (vk >= 0x01 && vk <= 0x02) return KeyCategory.Mouse;
+        if (vk == 0x04 || vk == 0x05 || vk == 0x06) return KeyCategory.Mouse;
+        if (vk >= 0x101 && vk <= 0x104) return KeyCategory.Mouse;
         if (vk >= 0x41 && vk <= 0x5A) return KeyCategory.Letters;
         if (vk >= 0x30 && vk <= 0x39) return KeyCategory.Numbers;
         if (vk >= 0x60 && vk <= 0x6F) return KeyCategory.Numpad;
@@ -144,6 +157,15 @@ public static class KeyMapper
 
     private static Dictionary<int, string> BuildNames() => new()
     {
+        [0x01] = "Left Mouse Button",
+        [0x02] = "Right Mouse Button",
+        [0x04] = "Middle Mouse Button",
+        [0x05] = "X1 Mouse Button",
+        [0x06] = "X2 Mouse Button",
+        [0x101] = "Scroll Wheel Up",
+        [0x102] = "Scroll Wheel Down",
+        [0x103] = "Scroll Wheel Left",
+        [0x104] = "Scroll Wheel Right",
         [0x08] = "Backspace",
         [0x09] = "Tab",
         [0x0D] = "Enter",

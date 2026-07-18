@@ -23,11 +23,13 @@ internal sealed class Win32InputMonitor : IDisposable
 {
     // Kept as fields so the GC never collects the unmanaged callback thunks.
     private readonly NativeMethods.LowLevelKeyboardProc _keyboardProc;
+    private readonly NativeMethods.LowLevelMouseProc _mouseProc;
     private readonly NativeMethods.WinEventDelegate _winEventProc;
 
     private readonly HashSet<int> _pressedKeys = new();
 
     private IntPtr _keyboardHook = IntPtr.Zero;
+    private IntPtr _mouseHook = IntPtr.Zero;
     private IntPtr _winEventHook = IntPtr.Zero;
     private Thread? _thread;
     private uint _threadId;
@@ -42,6 +44,7 @@ internal sealed class Win32InputMonitor : IDisposable
     public Win32InputMonitor()
     {
         _keyboardProc = KeyboardCallback;
+        _mouseProc = MouseCallback;
         _winEventProc = WinEventCallback;
     }
 
@@ -74,6 +77,9 @@ internal sealed class Win32InputMonitor : IDisposable
         _keyboardHook = NativeMethods.SetWindowsHookEx(
             NativeMethods.WH_KEYBOARD_LL, _keyboardProc, hInstance, 0);
 
+        _mouseHook = NativeMethods.SetWindowsHookEx(
+            NativeMethods.WH_MOUSE_LL, _mouseProc, hInstance, 0);
+
         _winEventHook = NativeMethods.SetWinEventHook(
             NativeMethods.EVENT_SYSTEM_FOREGROUND, NativeMethods.EVENT_SYSTEM_FOREGROUND,
             IntPtr.Zero, _winEventProc, 0, 0, NativeMethods.WINEVENT_OUTOFCONTEXT);
@@ -97,11 +103,80 @@ internal sealed class Win32InputMonitor : IDisposable
             NativeMethods.UnhookWindowsHookEx(_keyboardHook);
             _keyboardHook = IntPtr.Zero;
         }
+        if (_mouseHook != IntPtr.Zero)
+        {
+            NativeMethods.UnhookWindowsHookEx(_mouseHook);
+            _mouseHook = IntPtr.Zero;
+        }
         if (_winEventHook != IntPtr.Zero)
         {
             NativeMethods.UnhookWinEvent(_winEventHook);
             _winEventHook = IntPtr.Zero;
         }
+    }
+
+    private IntPtr MouseCallback(int nCode, IntPtr wParam, IntPtr lParam)
+    {
+        // HC_ACTION (0) means lParam holds a valid MSLLHOOKSTRUCT.
+        if (nCode == 0 && CaptureEnabled)
+        {
+            int msg = (int)wParam;
+            if (msg == NativeMethods.WM_LBUTTONDOWN)
+            {
+                KeyDown?.Invoke(0x01); // VK_LBUTTON
+            }
+            else if (msg == NativeMethods.WM_RBUTTONDOWN)
+            {
+                KeyDown?.Invoke(0x02); // VK_RBUTTON
+            }
+            else if (msg == NativeMethods.WM_MBUTTONDOWN)
+            {
+                KeyDown?.Invoke(0x04); // VK_MBUTTON
+            }
+            else if (msg == NativeMethods.WM_XBUTTONDOWN)
+            {
+                var data = System.Runtime.InteropServices.Marshal
+                    .PtrToStructure<NativeMethods.MSLLHOOKSTRUCT>(lParam);
+                int xbutton = (int)((data.mouseData >> 16) & 0xFFFF);
+                if (xbutton == 1)
+                {
+                    KeyDown?.Invoke(0x05); // VK_XBUTTON1
+                }
+                else if (xbutton == 2)
+                {
+                    KeyDown?.Invoke(0x06); // VK_XBUTTON2
+                }
+            }
+            else if (msg == NativeMethods.WM_MOUSEWHEEL)
+            {
+                var data = System.Runtime.InteropServices.Marshal
+                    .PtrToStructure<NativeMethods.MSLLHOOKSTRUCT>(lParam);
+                short delta = (short)((data.mouseData >> 16) & 0xFFFF);
+                if (delta > 0)
+                {
+                    KeyDown?.Invoke(0x101); // Pseudo-VK for Scroll Wheel Up
+                }
+                else if (delta < 0)
+                {
+                    KeyDown?.Invoke(0x102); // Pseudo-VK for Scroll Wheel Down
+                }
+            }
+            else if (msg == NativeMethods.WM_MOUSEHWHEEL)
+            {
+                var data = System.Runtime.InteropServices.Marshal
+                    .PtrToStructure<NativeMethods.MSLLHOOKSTRUCT>(lParam);
+                short delta = (short)((data.mouseData >> 16) & 0xFFFF);
+                if (delta > 0)
+                {
+                    KeyDown?.Invoke(0x104); // Pseudo-VK for Scroll Wheel Right
+                }
+                else if (delta < 0)
+                {
+                    KeyDown?.Invoke(0x103); // Pseudo-VK for Scroll Wheel Left
+                }
+            }
+        }
+        return NativeMethods.CallNextHookEx(IntPtr.Zero, nCode, wParam, lParam);
     }
 
     private IntPtr KeyboardCallback(int nCode, IntPtr wParam, IntPtr lParam)
