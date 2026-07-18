@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(dotnet workload list)",
+      "PowerShell(dotnet restore c:\\\\Users\\\\admin\\\\Downloads\\\\KeyStrokes\\\\KeyStrokes.csproj)"
+    ]
+  }
+}

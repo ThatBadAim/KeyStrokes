@@ -1,0 +1,167 @@
+<UserControl x:Class="KeyStrokes.Views.HistoryView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ctl="clr-namespace:KeyStrokes.Controls"
+             xmlns:vm="clr-namespace:KeyStrokes.ViewModels"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance vm:HistoryViewModel}">
+
+    <UserControl.Resources>
+        <LinearGradientBrush x:Key="BarBrush" StartPoint="0,1" EndPoint="0,0">
+            <GradientStop Color="#4F46E5" Offset="0"/>
+            <GradientStop Color="#7C6CF0" Offset="1"/>
+        </LinearGradientBrush>
+        <LinearGradientBrush x:Key="BarPeakBrush" StartPoint="0,1" EndPoint="0,0">
+            <GradientStop Color="#A838E0" Offset="0"/>
+            <GradientStop Color="#FF3D9A" Offset="1"/>
+        </LinearGradientBrush>
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Toolbar -->
+        <Grid Grid.Row="0" Margin="0,0,0,14">
+            <ComboBox HorizontalAlignment="Left" Style="{StaticResource ScopeCombo}" VerticalAlignment="Center"
+                      ItemsSource="{Binding Groupings}" SelectedItem="{Binding SelectedGrouping}">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding Converter={StaticResource EnumLabel}}"/>
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+        </Grid>
+
+        <!-- Summary cards -->
+        <Grid Grid.Row="1" Margin="-7,0,-7,7">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <Border Grid.Column="0" Style="{StaticResource Card}" Margin="7" Padding="18">
+                <StackPanel>
+                    <TextBlock Text="TOTAL RECORDED" Style="{StaticResource MetricLabel}"/>
+                    <ctl:AnimatedNumber Value="{Binding RangeTotal}" NumberFormat="N0" Margin="0,6,0,0"
+                                        FontFamily="{StaticResource DisplayFont}" FontWeight="Bold" FontSize="28"
+                                        Foreground="{StaticResource TextPrimaryBrush}"/>
+                </StackPanel>
+            </Border>
+
+            <Border Grid.Column="1" Style="{StaticResource Card}" Margin="7" Padding="18">
+                <StackPanel>
+                    <TextBlock Text="BUSIEST" Style="{StaticResource MetricLabel}"/>
+                    <TextBlock Text="{Binding BusiestCount, Converter={StaticResource Thousands}}" Margin="0,6,0,0"
+                               FontFamily="{StaticResource DisplayFont}" FontWeight="Bold" FontSize="28"
+                               Foreground="{StaticResource TextPrimaryBrush}"/>
+                    <TextBlock Text="{Binding BusiestLabel}" Style="{StaticResource Caption}" Margin="0,2,0,0" TextTrimming="CharacterEllipsis"/>
+                </StackPanel>
+            </Border>
+
+            <Border Grid.Column="2" Style="{StaticResource Card}" Margin="7" Padding="18">
+                <StackPanel>
+                    <TextBlock Text="DAILY AVERAGE" Style="{StaticResource MetricLabel}"/>
+                    <TextBlock Text="{Binding DailyAverage, Converter={StaticResource Thousands}}" Margin="0,6,0,0"
+                               FontFamily="{StaticResource DisplayFont}" FontWeight="Bold" FontSize="28"
+                               Foreground="{StaticResource TextPrimaryBrush}"/>
+                    <TextBlock Text="keys / active day" Style="{StaticResource Caption}" Margin="0,2,0,0"/>
+                </StackPanel>
+            </Border>
+
+            <Border Grid.Column="3" Style="{StaticResource Card}" Margin="7" Padding="18">
+                <StackPanel>
+                    <TextBlock Text="ACTIVE DAYS" Style="{StaticResource MetricLabel}"/>
+                    <TextBlock Text="{Binding ActiveDays}" Margin="0,6,0,0"
+                               FontFamily="{StaticResource DisplayFont}" FontWeight="Bold" FontSize="28"
+                               Foreground="{StaticResource TextPrimaryBrush}"/>
+                    <TextBlock Text="days with activity" Style="{StaticResource Caption}" Margin="0,2,0,0"/>
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <!-- Chart -->
+        <Border Grid.Row="2" Style="{StaticResource Card}" Margin="0,7,0,0">
+            <Grid>
+                <TextBlock Text="Usage over time" Style="{StaticResource SectionTitle}" VerticalAlignment="Top"/>
+
+                <ScrollViewer VerticalScrollBarVisibility="Disabled" HorizontalScrollBarVisibility="Auto"
+                              Margin="0,34,0,0" VerticalAlignment="Bottom">
+                    <ItemsControl ItemsSource="{Binding Bars}" VerticalAlignment="Bottom">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom"/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Margin="6,0" VerticalAlignment="Bottom">
+                                    <Grid Height="240" VerticalAlignment="Bottom">
+                                        <Border Width="30" VerticalAlignment="Bottom" CornerRadius="7,7,3,3"
+                                                Height="{Binding Fraction, Converter={StaticResource FracHeight}, ConverterParameter=224}">
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <Setter Property="Background" Value="{StaticResource BarBrush}"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsPeak}" Value="True">
+                                                            <Setter Property="Background" Value="{StaticResource BarPeakBrush}"/>
+                                                            <Setter Property="Effect">
+                                                                <Setter.Value>
+                                                                    <DropShadowEffect Color="#FF3D9A" BlurRadius="16" ShadowDepth="0" Opacity="0.7"/>
+                                                                </Setter.Value>
+                                                            </Setter>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
+                                            <Border.ToolTip>
+                                                <ToolTip>
+                                                    <StackPanel>
+                                                        <TextBlock Text="{Binding Label}" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}"/>
+                                                        <TextBlock Foreground="{StaticResource TextSecondaryBrush}">
+                                                            <Run Text="{Binding Count, Mode=OneWay, Converter={StaticResource Thousands}}"/><Run Text=" keys"/>
+                                                        </TextBlock>
+                                                    </StackPanel>
+                                                </ToolTip>
+                                            </Border.ToolTip>
+                                        </Border>
+                                    </Grid>
+                                    <TextBlock Text="{Binding Label}" HorizontalAlignment="Center" Margin="0,8,0,0"
+                                               FontSize="11.5" Foreground="{StaticResource TextSecondaryBrush}"/>
+                                    <TextBlock Text="{Binding SubLabel}" HorizontalAlignment="Center" Margin="0,1,0,0"
+                                               FontSize="10" Foreground="{StaticResource TextMutedBrush}"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+
+                <!-- Empty state -->
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <StackPanel.Style>
+                        <Style TargetType="StackPanel">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding ActiveDays}" Value="0">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </StackPanel.Style>
+                    <TextBlock Text="&#xE81C;" FontFamily="{StaticResource IconFont}" FontSize="40"
+                               Foreground="{StaticResource TextMutedBrush}" HorizontalAlignment="Center"/>
+                    <TextBlock Text="No history yet" Style="{StaticResource SectionTitle}" HorizontalAlignment="Center" Margin="0,12,0,0"/>
+                    <TextBlock Text="Keep typing — daily trends will appear here." Style="{StaticResource Caption}"
+                               HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

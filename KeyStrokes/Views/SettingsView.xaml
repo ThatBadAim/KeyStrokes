@@ -1,0 +1,109 @@
+<UserControl x:Class="KeyStrokes.Views.SettingsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:KeyStrokes.ViewModels"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance vm:SettingsViewModel}">
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="0,0,4,0">
+        <Grid Margin="-7">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="1.15*"/>
+                <ColumnDefinition Width="1*"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- Privacy exclusions -->
+            <Border Grid.Row="0" Grid.Column="0" Grid.RowSpan="2" Style="{StaticResource Card}" Margin="7">
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="&#xE72E;" FontFamily="{StaticResource IconFont}" FontSize="16"
+                                   Foreground="{StaticResource SuccessBrush}" VerticalAlignment="Center"/>
+                        <TextBlock Text="Sensitive field protection" Style="{StaticResource SectionTitle}" Margin="10,0,0,0" VerticalAlignment="Center"/>
+                    </StackPanel>
+                    <TextBlock Style="{StaticResource Body}" Margin="0,10,0,0" TextWrapping="Wrap"
+                               Text="When any of these apps — or a window whose title contains one of these keywords — is in the foreground, capture is paused and keystrokes are discarded before they are ever counted."/>
+
+                    <TextBlock Text="PROTECTED APPS (one per line)" Style="{StaticResource MetricLabel}" Margin="0,18,0,8"/>
+                    <TextBox Style="{StaticResource AppTextBox}" MinHeight="120" AcceptsReturn="True" TextWrapping="Wrap"
+                             VerticalScrollBarVisibility="Auto" VerticalContentAlignment="Top"
+                             Text="{Binding ExcludedProcessesText, UpdateSourceTrigger=PropertyChanged}"/>
+
+                    <TextBlock Text="PROTECTED WINDOW-TITLE KEYWORDS (one per line)" Style="{StaticResource MetricLabel}" Margin="0,16,0,8"/>
+                    <TextBox Style="{StaticResource AppTextBox}" MinHeight="120" AcceptsReturn="True" TextWrapping="Wrap"
+                             VerticalScrollBarVisibility="Auto" VerticalContentAlignment="Top"
+                             Text="{Binding ExcludedTitleKeywordsText, UpdateSourceTrigger=PropertyChanged}"/>
+
+                    <StackPanel Orientation="Horizontal" Margin="0,16,0,0">
+                        <Button Style="{StaticResource PrimaryButton}" Content="Save protection rules" Command="{Binding SaveCommand}"/>
+                        <TextBlock Text="{Binding StatusMessage}" Margin="14,0,0,0" VerticalAlignment="Center"
+                                   Foreground="{StaticResource SuccessBrush}" FontSize="12.5"
+                                   Visibility="{Binding StatusMessage, Converter={StaticResource StrToVis}}"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <!-- Behavior -->
+            <Border Grid.Row="0" Grid.Column="1" Style="{StaticResource Card}" Margin="7">
+                <StackPanel>
+                    <TextBlock Text="Behavior" Style="{StaticResource SectionTitle}"/>
+                    <Grid Margin="0,14,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" Margin="0,0,16,0">
+                            <TextBlock Text="Minimize to tray on close" FontSize="13.5" FontWeight="SemiBold"
+                                       Foreground="{StaticResource TextPrimaryBrush}"/>
+                            <TextBlock Text="Keep tracking in the background instead of exiting when you close the window."
+                                       Style="{StaticResource Caption}" TextWrapping="Wrap" Margin="0,4,0,0"/>
+                        </StackPanel>
+                        <ToggleButton Grid.Column="1" Style="{StaticResource ToggleSwitch}" VerticalAlignment="Center"
+                                      IsChecked="{Binding MinimizeToTrayOnClose, Mode=TwoWay}"/>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <!-- Data & storage -->
+            <Border Grid.Row="1" Grid.Column="1" Style="{StaticResource Card}" Margin="7">
+                <StackPanel>
+                    <TextBlock Text="Data &amp; storage" Style="{StaticResource SectionTitle}"/>
+
+                    <TextBlock Text="STORED LOCALLY AT" Style="{StaticResource MetricLabel}" Margin="0,14,0,6"/>
+                    <Border Style="{StaticResource InnerCard}" Padding="12,10">
+                        <TextBlock Text="{Binding DataFilePath}" Style="{StaticResource Caption}" TextWrapping="Wrap"
+                                   FontFamily="Consolas, Cascadia Mono, monospace"/>
+                    </Border>
+
+                    <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+                        <Button Style="{StaticResource GhostButton}" Content="Open folder" Command="{Binding OpenDataFolderCommand}"/>
+                        <Button Style="{StaticResource GhostButton}" Content="Export CSV" Margin="8,0,0,0"
+                                Command="{Binding DataContext.ExportCsvCommand, RelativeSource={RelativeSource AncestorType=Window}}"/>
+                        <Button Style="{StaticResource GhostButton}" Content="Export JSON" Margin="8,0,0,0"
+                                Command="{Binding DataContext.ExportJsonCommand, RelativeSource={RelativeSource AncestorType=Window}}"/>
+                    </StackPanel>
+
+                    <Rectangle Height="1" Fill="{StaticResource StrokeBrush}" Margin="0,18,0,16"/>
+
+                    <TextBlock Text="DATA MANAGEMENT" Style="{StaticResource MetricLabel}" Margin="0,0,0,10"/>
+                    <StackPanel Orientation="Horizontal">
+                        <Button Style="{StaticResource GhostButton}" Content="Clear session"
+                                Command="{Binding DataContext.ClearSessionCommand, RelativeSource={RelativeSource AncestorType=Window}}"/>
+                        <Button Style="{StaticResource DangerButton}" Content="Erase all data" Margin="8,0,0,0"
+                                Command="{Binding DataContext.ClearAllCommand, RelativeSource={RelativeSource AncestorType=Window}}"/>
+                    </StackPanel>
+
+                    <Border Style="{StaticResource InnerCard}" Margin="0,16,0,0" Padding="12,10" Background="#14FB7185" BorderBrush="#3AFB7185">
+                        <TextBlock Style="{StaticResource Caption}" TextWrapping="Wrap" Foreground="#FCC7CF"
+                                   Text="KeyStrokes only ever stores aggregate counts per key — never the order keys were pressed, so typed text cannot be reconstructed. Nothing is sent over the network."/>
+                    </Border>
+                </StackPanel>
+            </Border>
+        </Grid>
+    </ScrollViewer>
+</UserControl>

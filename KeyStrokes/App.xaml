@@ -1,0 +1,24 @@
+<Application x:Class="KeyStrokes.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:helpers="clr-namespace:KeyStrokes.Helpers"
+             ShutdownMode="OnExplicitShutdown">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Themes/Styles.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+
+            <!-- Converters -->
+            <helpers:BoolToVisibilityConverter x:Key="BoolToVis"/>
+            <helpers:InverseBoolConverter x:Key="InverseBool"/>
+            <helpers:StringToVisibilityConverter x:Key="StrToVis"/>
+            <helpers:KeyWidthConverter x:Key="KeyWidth"/>
+            <helpers:FractionToWidthConverter x:Key="FracWidth"/>
+            <helpers:FractionToHeightConverter x:Key="FracHeight"/>
+            <helpers:ThousandsConverter x:Key="Thousands"/>
+            <helpers:EnumLabelConverter x:Key="EnumLabel"/>
+            <helpers:IntensityToGlowConverter x:Key="IntensityGlow"/>
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>
