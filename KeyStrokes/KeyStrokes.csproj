@@ -1,0 +1,48 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
+    <LangVersion>latest</LangVersion>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <AssemblyName>KeyStrokes</AssemblyName>
+    <RootNamespace>KeyStrokes</RootNamespace>
+    <Version>1.0.0</Version>
+    <Product>KeyStrokes</Product>
+    <Company>KeyStrokes</Company>
+    <Description>Local-first keystroke telemetry and productivity tracker.</Description>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+    <!-- WPF honors the PerMonitorV2 DPI settings in app.manifest. The WinForms
+         analyzer (enabled only because of the tray icon) flags them; the tray icon
+         has no DPI-sensitive UI, so this warning is safely suppressed. -->
+    <NoWarn>$(NoWarn);WFO0003</NoWarn>
+    <ApplicationIcon>Assets\app.ico</ApplicationIcon>
+    <AssemblyTitle>KeyStrokes</AssemblyTitle>
+    <!--
+      Privacy note: this project intentionally declares ZERO external package or
+      network dependencies. Persistence uses System.Text.Json (BCL) with atomic
+      writes. Nothing here can cause the app to reach the network.
+    -->
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Also expose the icon as a WPF resource so it can be used as the window icon. -->
+    <Resource Include="Assets\app.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!--
+      UseWindowsForms auto-adds global usings for System.Drawing and
+      System.Windows.Forms. In a WPF app that makes Color/Point/Brush/Application/
+      MessageBox ambiguous. Only App.xaml.cs needs WinForms (for the tray icon) and
+      it imports those namespaces explicitly, so drop the global usings here.
+    -->
+    <Using Remove="System.Drawing" />
+    <Using Remove="System.Windows.Forms" />
+  </ItemGroup>
+
+</Project>
