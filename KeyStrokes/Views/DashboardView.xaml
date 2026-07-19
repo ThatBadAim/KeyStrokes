@@ -55,7 +55,7 @@
                                 <TextBlock Text="&#xE734;" FontFamily="{StaticResource IconFont}" FontSize="12"
                                            Foreground="{StaticResource Accent2Brush}" VerticalAlignment="Center"/>
                                 <TextBlock Margin="7,0,0,0" Style="{StaticResource Caption}" VerticalAlignment="Center">
-                                    <Run Text="{Binding DistinctKeys, Mode=OneWay}"/><Run Text=" distinct keys · most used "/><Run Text="{Binding FavoriteKey, Mode=OneWay}" FontWeight="SemiBold" Foreground="#C7C9FF"/>
+                            <Run Text="{Binding DistinctKeys, Mode=OneWay, Converter={StaticResource Thousands}}"/><Run Text=" distinct keys · most used "/><Run Text="{Binding FavoriteKey, Mode=OneWay}" FontWeight="SemiBold" Foreground="#C7C9FF"/>
                                 </TextBlock>
                             </StackPanel>
                             <!-- accent underline -->
@@ -82,7 +82,7 @@
                         </TextBlock>
                         <TextBlock Text="  ·  " Style="{StaticResource Caption}"/>
                         <TextBlock Style="{StaticResource Caption}">
-                            <Run Text="peak "/><Run Text="{Binding PeakKpm, Mode=OneWay}" FontWeight="SemiBold" Foreground="{StaticResource Accent2Brush}"/>
+                            <Run Text="peak "/><Run Text="{Binding PeakKpm, Mode=OneWay, Converter={StaticResource Thousands}}" FontWeight="SemiBold" Foreground="{StaticResource Accent2Brush}"/>
                         </TextBlock>
                     </StackPanel>
                 </Grid>
