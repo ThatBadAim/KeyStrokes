@@ -33,6 +33,10 @@ public sealed class TrackingService : IDisposable
     private readonly ConcurrentDictionary<string, double> _dailyMouseDistance = new();
     private readonly ConcurrentDictionary<string, double> _dailyScrollDistance = new();
 
+    private double _pendingTodayMouseDistance;
+    private double _pendingTodayScrollDistance;
+    private readonly object _mouseFlushLock = new();
+
     private readonly object _kpmLock = new();
     private readonly Queue<long> _kpmTimestamps = new();
 
@@ -73,19 +77,51 @@ public sealed class TrackingService : IDisposable
     public double LifetimeMouseDistance => _lifetimeMouseDistance;
     public double LifetimeScrollDistance => _lifetimeScrollDistance;
 
-    public double GetMouseDistance(Scope scope) => scope switch
+    private void FlushPending()
     {
-        Scope.Session => _sessionMouseDistance,
-        Scope.Today => _dailyMouseDistance.TryGetValue(TodayKey, out var d) ? d : 0,
-        _ => _lifetimeMouseDistance,
-    };
+        double mouseDist;
+        double scrollDist;
+        lock (_mouseFlushLock)
+        {
+            mouseDist = _pendingTodayMouseDistance;
+            scrollDist = _pendingTodayScrollDistance;
+            _pendingTodayMouseDistance = 0;
+            _pendingTodayScrollDistance = 0;
+        }
 
-    public double GetScrollDistance(Scope scope) => scope switch
+        if (mouseDist > 0)
+        {
+            _dailyMouseDistance.AddOrUpdate(TodayKey, mouseDist, (_, v) => v + mouseDist);
+            _dirty = true;
+        }
+        if (scrollDist > 0)
+        {
+            _dailyScrollDistance.AddOrUpdate(TodayKey, scrollDist, (_, v) => v + scrollDist);
+            _dirty = true;
+        }
+    }
+
+    public double GetMouseDistance(Scope scope)
     {
-        Scope.Session => _sessionScrollDistance,
-        Scope.Today => _dailyScrollDistance.TryGetValue(TodayKey, out var d) ? d : 0,
-        _ => _lifetimeScrollDistance,
-    };
+        FlushPending();
+        return scope switch
+        {
+            Scope.Session => _sessionMouseDistance,
+            Scope.Today => _dailyMouseDistance.TryGetValue(TodayKey, out var d) ? d : 0,
+            _ => _lifetimeMouseDistance,
+        };
+    }
+
+    public double GetScrollDistance(Scope scope)
+    {
+        FlushPending();
+        return scope switch
+        {
+            Scope.Session => _sessionScrollDistance,
+            Scope.Today => _dailyScrollDistance.TryGetValue(TodayKey, out var d) ? d : 0,
+            _ => _lifetimeScrollDistance,
+        };
+    }
 
     public long KeysToday
     {
@@ -175,8 +211,10 @@ public sealed class TrackingService : IDisposable
         _lifetimeMouseDistance += distance;
         _sessionMouseDistance += distance;
 
-        _dailyMouseDistance.AddOrUpdate(TodayKey, distance, (_, v) => v + distance);
-        _dirty = true;
+        lock (_mouseFlushLock)
+        {
+            _pendingTodayMouseDistance += distance;
+        }
     }
 
     private void OnMouseScrolled(double distance)
@@ -186,8 +224,10 @@ public sealed class TrackingService : IDisposable
         _lifetimeScrollDistance += distance;
         _sessionScrollDistance += distance;
 
-        _dailyScrollDistance.AddOrUpdate(TodayKey, distance, (_, v) => v + distance);
-        _dirty = true;
+        lock (_mouseFlushLock)
+        {
+            _pendingTodayScrollDistance += distance;
+        }
     }
 
     private void OnKeyDown(int vk)
@@ -323,6 +363,7 @@ public sealed class TrackingService : IDisposable
 
     private void AutosaveTick()
     {
+        FlushPending();
         if (!_dirty) return;
         _ = SaveNowAsync();
     }
