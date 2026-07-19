@@ -26,6 +26,13 @@ public sealed class TrackingService : IDisposable
     private readonly ConcurrentDictionary<int, long> _session = new();
     private readonly ConcurrentDictionary<string, ConcurrentDictionary<int, long>> _daily = new();
 
+    private double _lifetimeMouseDistance;
+    private double _lifetimeScrollDistance;
+    private double _sessionMouseDistance;
+    private double _sessionScrollDistance;
+    private readonly ConcurrentDictionary<string, double> _dailyMouseDistance = new();
+    private readonly ConcurrentDictionary<string, double> _dailyScrollDistance = new();
+
     private readonly object _kpmLock = new();
     private readonly Queue<long> _kpmTimestamps = new();
 
@@ -60,6 +67,25 @@ public sealed class TrackingService : IDisposable
     public int PeakKpm => _peakKpm;
     public DateTime SessionStartUtc => _sessionStartUtc;
     public DateTime InstalledUtc => _installedUtc;
+
+    public double SessionMouseDistance => _sessionMouseDistance;
+    public double SessionScrollDistance => _sessionScrollDistance;
+    public double LifetimeMouseDistance => _lifetimeMouseDistance;
+    public double LifetimeScrollDistance => _lifetimeScrollDistance;
+
+    public double GetMouseDistance(Scope scope) => scope switch
+    {
+        Scope.Session => _sessionMouseDistance,
+        Scope.Today => _dailyMouseDistance.TryGetValue(TodayKey, out var d) ? d : 0,
+        _ => _lifetimeMouseDistance,
+    };
+
+    public double GetScrollDistance(Scope scope) => scope switch
+    {
+        Scope.Session => _sessionScrollDistance,
+        Scope.Today => _dailyScrollDistance.TryGetValue(TodayKey, out var d) ? d : 0,
+        _ => _lifetimeScrollDistance,
+    };
 
     public long KeysToday
     {
@@ -99,10 +125,17 @@ public sealed class TrackingService : IDisposable
             _daily[day.Key] = bucket;
         }
 
+        _lifetimeMouseDistance = data.LifetimeMouseDistance;
+        _lifetimeScrollDistance = data.LifetimeScrollDistance;
+        foreach (var kv in data.DailyMouseDistance) _dailyMouseDistance[kv.Key] = kv.Value;
+        foreach (var kv in data.DailyScrollDistance) _dailyScrollDistance[kv.Key] = kv.Value;
+
         _privacy.UpdateRules(_settings);
         _privacy.ExclusionChanged += () => StateChanged?.Invoke();
 
         _monitor.KeyDown += OnKeyDown;
+        _monitor.MouseMoved += OnMouseMoved;
+        _monitor.MouseScrolled += OnMouseScrolled;
         _monitor.ForegroundChanged += info => _privacy.Evaluate(info);
 
         _autosaveTimer = new Timer(_ => AutosaveTick(), null, AutosaveIntervalMs, AutosaveIntervalMs);
@@ -135,6 +168,28 @@ public sealed class TrackingService : IDisposable
     }
 
     // ---- Hot path (monitor thread) ---------------------------------------
+    private void OnMouseMoved(double distance)
+    {
+        if (_privacy.IsCurrentlyExcluded) return;
+
+        _lifetimeMouseDistance += distance;
+        _sessionMouseDistance += distance;
+
+        _dailyMouseDistance.AddOrUpdate(TodayKey, distance, (_, v) => v + distance);
+        _dirty = true;
+    }
+
+    private void OnMouseScrolled(double distance)
+    {
+        if (_privacy.IsCurrentlyExcluded) return;
+
+        _lifetimeScrollDistance += distance;
+        _sessionScrollDistance += distance;
+
+        _dailyScrollDistance.AddOrUpdate(TodayKey, distance, (_, v) => v + distance);
+        _dirty = true;
+    }
+
     private void OnKeyDown(int vk)
     {
         // Second guard: even though the monitor is live, drop the press if the
@@ -207,6 +262,8 @@ public sealed class TrackingService : IDisposable
     {
         _session.Clear();
         Interlocked.Exchange(ref _sessionTotal, 0);
+        _sessionMouseDistance = 0;
+        _sessionScrollDistance = 0;
         _peakKpm = 0;
         _sessionStartUtc = DateTime.UtcNow;
         lock (_kpmLock) _kpmTimestamps.Clear();
@@ -218,6 +275,12 @@ public sealed class TrackingService : IDisposable
         _lifetime.Clear();
         _session.Clear();
         _daily.Clear();
+        _dailyMouseDistance.Clear();
+        _dailyScrollDistance.Clear();
+        _lifetimeMouseDistance = 0;
+        _lifetimeScrollDistance = 0;
+        _sessionMouseDistance = 0;
+        _sessionScrollDistance = 0;
         Interlocked.Exchange(ref _lifetimeTotal, 0);
         Interlocked.Exchange(ref _sessionTotal, 0);
         _peakKpm = 0;
@@ -248,6 +311,10 @@ public sealed class TrackingService : IDisposable
             InstalledUtc = _installedUtc,
             Settings = _settings,
             LifetimeKeyCounts = new Dictionary<int, long>(_lifetime),
+            LifetimeMouseDistance = _lifetimeMouseDistance,
+            LifetimeScrollDistance = _lifetimeScrollDistance,
+            DailyMouseDistance = new Dictionary<string, double>(_dailyMouseDistance),
+            DailyScrollDistance = new Dictionary<string, double>(_dailyScrollDistance),
         };
         foreach (var day in _daily)
             data.DailyKeyCounts[day.Key] = new Dictionary<int, long>(day.Value);

@@ -21,6 +21,7 @@ internal static class NativeMethods
     public const int WM_SYSKEYUP = 0x0105;
     public const int WM_QUIT = 0x0012;
 
+    public const int WM_MOUSEMOVE = 0x0200;
     public const int WM_LBUTTONDOWN = 0x0201;
     public const int WM_RBUTTONDOWN = 0x0204;
     public const int WM_MBUTTONDOWN = 0x0207;
