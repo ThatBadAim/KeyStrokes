@@ -42,6 +42,15 @@ public sealed class DashboardViewModel : PageViewModel
     private int _distinctKeys;
     public int DistinctKeys { get => _distinctKeys; set => SetProperty(ref _distinctKeys, value); }
 
+    private long _sessionMouseClicks;
+    public long SessionMouseClicks { get => _sessionMouseClicks; set => SetProperty(ref _sessionMouseClicks, value); }
+
+    private double _sessionMouseDistance;
+    public double SessionMouseDistance { get => _sessionMouseDistance; set => SetProperty(ref _sessionMouseDistance, value); }
+
+    private double _sessionScrollDistance;
+    public double SessionScrollDistance { get => _sessionScrollDistance; set => SetProperty(ref _sessionScrollDistance, value); }
+
     public ObservableCollection<KeyStat> TopKeys { get; } = new();
 
     public override void Refresh()
@@ -63,6 +72,18 @@ public sealed class DashboardViewModel : PageViewModel
             ? $"{(int)span.TotalHours}h {span.Minutes}m"
             : $"{span.Minutes}m {span.Seconds}s";
 
+        var sessionCounts = Tracking.GetCounts(TrackingService.Scope.Session);
+        long clicks = 0;
+        if (sessionCounts.TryGetValue(0x01, out var lc)) clicks += lc;
+        if (sessionCounts.TryGetValue(0x02, out var rc)) clicks += rc;
+        if (sessionCounts.TryGetValue(0x04, out var mc)) clicks += mc;
+        if (sessionCounts.TryGetValue(0x05, out var xc1)) clicks += xc1;
+        if (sessionCounts.TryGetValue(0x06, out var xc2)) clicks += xc2;
+        SessionMouseClicks = clicks;
+
+        SessionMouseDistance = Tracking.SessionMouseDistance;
+        SessionScrollDistance = Tracking.SessionScrollDistance;
+
         RefreshTopKeys();
     }
 
@@ -74,7 +95,7 @@ public sealed class DashboardViewModel : PageViewModel
         long total = 0;
         foreach (var v in counts.Values) total += v;
 
-        var top = counts.OrderByDescending(kv => kv.Value).Take(5).ToList();
+        var top = counts.OrderByDescending(kv => kv.Value).Take(10).ToList();
         FavoriteKey = top.Count > 0 ? KeyMapper.FriendlyName(top[0].Key) : "—";
 
         // Rebuild the small (max 5) list in place.
